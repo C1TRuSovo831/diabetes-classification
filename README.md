@@ -1,155 +1,48 @@
-# 糖尿病分类预测：贝氏分类、k-NN 与 LDA 比较
+# 糖尿病分类预测课程实作
 
-模式识别课程实作，使用 Python 对课程提供的糖尿病预测数据进行处理，计划比较贝氏分类、k-最近邻法（k-NN）和线性判别分析（LDA）三种方法。
+在课程提供的 100,000 行 CSV 上比较混合朴素贝叶斯、k-最近邻（k-NN）和线性判别分析（LDA）。目标是识别 diabetes 标签，1 为阳性，0 为阴性。实验使用有吸烟史信息的记录。
 
-> **当前阶段：项目架构与启动验证。** 目前入口程序仅输出项目路径，尚未实现数据读取、预处理、模型训练或评估。本说明中的后续流程属于开发计划，不代表已经得到实验结果。
+## 复现实验
 
-## 1. 任务目标
-
-- 根据个体健康相关特征，预测 `diabetes` 对应的类别。
-- 将数据读取、预处理、模型构建、评估和流程协调分开组织，避免把全部逻辑写在一个脚本中。
-- 在一致的数据划分与评估条件下，比较三种分类方法。
-- 记录数据处理方式、实验设置和结果，支持后续复现与分析。
-
-`diabetes` 是目标标签，不能同时作为输入特征。贝氏分类的具体实现与假设将在结合课程内容和数据特点后明确；当前尚未选定或实现模型。
-
-## 2. 当前进度
-
-- [x] 建立 Conda 环境 `pr_diabetes`，使用 Python 3.11。
-- [x] 建立项目包、入口和路径配置。
-- [x] 将原始 CSV 放入数据目录。
-- [x] 从项目根目录运行入口，正确输出三个路径。
-- [ ] 实现 CSV 读取函数，并检查行列数、列名和样本内容。
-- [ ] 检查字段类型、缺失值、重复记录和标签分布。
-- [ ] 明确输入特征与标签，制定数据划分方案。
-- [ ] 实现与验证预处理流程。
-- [ ] 实现三种分类方法及统一实验流程。
-- [ ] 整理评估指标、图表和比较分析。
-- [ ] 完成课程要求的代码归档和实作报告。
-
-## 3. 项目结构
-
-```text
-diabetes_classification/
-├── main.py                    # 启动入口
-├── README.md                  # 项目说明
-├── diabetes_pr/               # 项目自己的 Python 包
-│   ├── __init__.py            # 包标识文件
-│   ├── config.py              # 项目路径与后续实验设置
-│   ├── data_io.py             # 数据读取模块，待实现
-│   ├── preprocessing.py       # 预处理模块，待实现
-│   ├── model.py               # 模型构建模块，待实现
-│   ├── evaluation.py          # 评估模块，待实现
-│   └── experiment.py          # 实验流程协调，目前仅输出路径
-├── data/
-│   └── raw/
-│       └── diabetes_prediction_dataset.csv
-└── outputs/                   # 预留的实验输出目录，目前无结果
-```
-
-### 模块职责
-
-| 文件 | 职责与当前状态 |
-| --- | --- |
-| [main.py](<main.py>) | 导入并调用 `run_experiment()`；保持入口简洁。 |
-| [config.py](<diabetes_pr/config.py>) | 定义 `PROJECT_PATH`、`RAW_DATA_DIR`、`OUTPUTS_DIR`，根据模块位置定位项目根目录。 |
-| [data_io.py](<diabetes_pr/data_io.py>) | 计划接收文件路径并返回数据表格；目前只有库导入，尚无读取函数。 |
-| [preprocessing.py](<diabetes_pr/preprocessing.py>) | 计划定义缺失值处理、类别编码和数值缩放等预处理；当前为空文件。 |
-| [model.py](<diabetes_pr/model.py>) | 计划集中创建分类模型；当前为空文件。 |
-| [evaluation.py](<diabetes_pr/evaluation.py>) | 计划根据真实标签与预测结果计算指标、整理结果；当前为空文件。 |
-| [experiment.py](<diabetes_pr/experiment.py>) | 负责协调各模块；目前只打印路径，不执行完整实验。 |
-
-约定：包内模块可使用相对导入，例如 `from .config import RAW_DATA_DIR`；项目入口使用完整包名导入。不通过修改 `sys.path` 来绕过导入问题。
-
-## 4. 数据说明
-
-原始数据为课程提供的 [diabetes_prediction_dataset.csv](<data/raw/diabetes_prediction_dataset.csv>)。作业说明标注其规模为 **100,000 条样本、9 个字段**.
-
-| 字段 | 含义 | 角色 |
-| --- | --- | --- |
-| `gender` | 性别类别 | 候选输入特征 |
-| `age` | 年龄 | 候选输入特征 |
-| `hypertension` | 高血压相关标记 | 候选输入特征 |
-| `heart_disease` | 心脏病相关标记 | 候选输入特征 |
-| `smoking_history` | 吸烟史类别 | 候选输入特征 |
-| `bmi` | 身体质量指数 | 候选输入特征 |
-| `HbA1c_level` | 糖化血红蛋白水平 | 候选输入特征 |
-| `blood_glucose_level` | 血糖水平 | 候选输入特征 |
-| `diabetes` | 糖尿病类别标记 | 目标标签 |
-
-### 原始数据管理约定
-
-- 原始文件仅用于读取，不通过清洗代码覆盖保存。
-- 解压得到、内容未修改的 CSV 仍属于原始数据。
-- 处理后的数据可以先保留在内存中；确需保存时，另设输出位置，不覆盖原件。
-- 不因为发现缺失值或重复记录就直接删除，先明确其含义和处理依据。
-
-## 5. 开发环境
-
-### 已有环境
-
-当前使用 Conda 环境 `pr_diabetes`，Python 版本为 3.11。
-
-在能够使用 Conda 的 PowerShell 或 Anaconda Prompt 中激活环境：
+验证环境为 Windows、Python 3.11.18，依赖版本见 `requirements.txt`。克隆后，在项目根目录创建 `data/raw/`，将课程提供的原始 CSV 放在 `data/raw/diabetes_prediction_dataset.csv`。原始数据需单独取得。
 
 ```powershell
-conda activate pr_diabetes
-```
-
-检查实际使用的 Python 和 pip：
-
-```powershell
-python --version
-python -c "import sys; print(sys.executable)"
-python -m pip --version
-```
-
-解释器路径通常应包含 `envs\pr_diabetes\python.exe`。如果使用 VS Code，还需通过 `Python: Select Interpreter` 选择同一环境；编辑器和终端的环境应分别核对。
-
-### 在新机器上准备基础环境
-
-已经创建环境的机器无需重复执行创建命令。新机器可以从以下基础环境开始：
-
-```powershell
-conda create --name pr_diabetes python=3.11 pip
-conda activate pr_diabetes
-python -m pip install pandas numpy
-```
-
-- `pathlib` 属于 Python 标准库，无需额外安装。
-- `pandas` 用于 CSV 读取和表格检查。
-- `numpy` 用于后续数值运算，当前读取模块已导入。
-- `scikit-learn`、`matplotlib` 等属于后续可能使用的工具，按实际实现需要添加。
-
-当前尚未维护固定版本的依赖清单，因此以上命令仅用于准备基础环境，不保证与已有环境的包版本完全一致。后续应记录直接依赖及验证过的版本。
-
-## 6. 运行方法
-
-先激活环境，再进入项目根目录运行入口。下方路径对应当前本机位置；如果移动项目，请替换成实际目录。
-
-```powershell
-conda activate pr_diabetes
-Set-Location "D:\downloads\diabetes_classification"
+python -m pip install -r requirements.txt
 python main.py
 ```
 
-当前预期输出：
+在已激活的 Python 3.11 环境中运行上述命令。程序按入口所在项目定位输入，自动创建 `outputs/`。本次实验所用原始 CSV 的 SHA-256 为 `f233fc470e904201f35310d061cb46ca0a6bc7ca5c3e428b769fb4f87f69929b`。
 
-```text
-项目根目录： D:\downloads\diabetes_classification
-原始数据目录： D:\downloads\diabetes_classification\data\raw
-输出目录： D:\downloads\diabetes_classification\outputs
-```
+## 数据与方法
 
-上述输出只验证入口、包内导入和路径定位，不代表已经读取数据或完成训练。配置中的 `Path` 运算也不会自动创建目录。
+1. 读取并检查九个字段。八项输入是年龄、BMI、糖化血红蛋白水平、血糖水平、高血压标记、心脏病标记、性别和吸烟史。目标标签仅用于分层、训练和评估。
+2. 从吸烟史列剔除 35,816 条 `No Info`，保留 `never`、`former`、`current`、`not current` 和 `ever`。再去除 925 条九列完全相同的重复行，留下 63,259 条记录，其中 7,037 条为阳性。
+3. 按八项输入的完整组合分组。39 组具有相同输入和相反标签，保留两种标签并分配到同一子集。按组内标签组成分层，种子 42，训练、验证、测试集分别为 37,955、12,652、12,652 条。
+4. 混合朴素贝叶斯按类估计四个连续特征的高斯密度，其余四个特征用加一平滑的类别频数。k-NN 和 LDA 采用训练数据拟合的连续特征标准化和无序类别独热编码，二元标记保留 0/1。k-NN 用欧氏距离和等权投票；LDA 用 SVD 求解、按样本比例估计先验。
+5. 在验证集按阳性 F1 从 3、5、9、15、31 中选择 k，并列时选较小值。确定 k=5 后，三种模型均在训练集与验证集合并后的 50,607 条记录上重新拟合，以阳性分数大于 0.5 为判别规则，在同一留出测试集评估。
 
-统一从入口启动，不直接把包内模块作为独立脚本运行，以免相对导入缺少包上下文。
+## 测试结果
 
-## 7. 后续开发与验证顺序
+| 方法 | 准确率 | 阳性精确率 | 阳性召回率 | 阳性 F1 | 漏判 | 误报 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 混合朴素贝叶斯 | 94.38% | 80.65% | 65.13% | 0.7206 | 491 | 220 |
+| k-NN（k=5） | 94.92% | 86.89% | 63.99% | 0.7370 | 507 | 136 |
+| LDA | 94.70% | 86.90% | 61.72% | 0.7218 | 539 | 131 |
 
-1. **读取数据**：让读取函数接收文件路径并返回 `DataFrame`，检查对象类型、行列数、列名和前几行。
-2. **理解数据**：检查字段类型、缺失值、特殊字符串、重复记录及标签分布，记录观察结果。
-3. **设计数据划分**：明确特征与标签；确定训练、验证和测试的使用方式，并记录随机种子。
-4. **实现预处理**：根据字段含义选择处理方式；需要学习参数的步骤仅在训练数据上拟合。
-5. **训练与比较模型**：在一致的评估条件下组织三种方法，不使用测试集反复调参。
-6. **评估与保存结果**：除准确率外，结合任务检查混淆矩阵、精确率、召回率、F1 等指标，再分析结果。
+测试集有 1,408 条阳性记录。以上结果对应固定划分和已记录吸烟史的样本；无患者编号可用于验证患者级独立性。
+
+## 文件与核查
+
+| 位置 | 内容 |
+| --- | --- |
+| `main.py` | 实验入口 |
+| `diabetes_pr/config.py` | 路径、特征、种子及 k 候选值 |
+| `diabetes_pr/data_io.py`、`inspection.py` | 读取、格式校验及原始数据检查 |
+| `diabetes_pr/preprocessing.py` | 筛选、去重、分组划分及编码 |
+| `diabetes_pr/model.py`、`evaluation.py`、`experiment.py` | 三种分类器、指标及运行流程 |
+| `outputs/cleaned_data.csv` | 已剔除 No Info 并去重的九列实验数据 |
+| `outputs/splits.csv` | 每条保留记录的原始行号、特征组、子集和真实标签 |
+| `outputs/test_predictions.csv` | 测试记录的原始行号、标签、三种模型的预测和阳性分数 |
+| `outputs/results.json` | 数据摘要、输入指纹、依赖版本、验证集 F1 和测试指标 |
+
+两个逐行结果文件中的 `source_row` 从 1 开始计数，跳过 CSV 表头。测试混淆矩阵以真实标签为行、预测标签为列，标签顺序均为 0、1。
